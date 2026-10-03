@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Carreira de Futebol RPG Pro</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #080808;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background-color: #0f0f12;
+            border: 1px solid #222;
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .section-title {
+            font-size: 11px;
+            color: #ffcc00;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .card {
+            background-color: #16161a;
+            border: 1px solid #26262e;
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #202026;
+            border: 1px solid #333;
+            color: #fff;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .btn-avancar {
+            width: 100%;
+            background-color: #ffcc00;
+            color: #000;
+            font-weight: bold;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .btn-avancar:active {
+            background-color: #e6b800;
+        }
+
+        /* Abas / Menu */
+        .nav-tabs {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .tab-btn {
+            background-color: #1f1f26;
+            color: #aaa;
+            border: 1px solid #333;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .tab-btn.active {
+            background-color: #ffcc00;
+            color: #000;
+            font-weight: bold;
+        }
+
+        /* Ecrãs e Abas */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        #main-screen, #game-screen, #retirement-screen { display: none; }
+
+        /* Grid e Barras */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .stat-box {
+            background-color: #202026;
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffcc00;
+        }
+
+        .stat-lbl {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .progress-bar-bg {
+            height: 8px;
+            background-color: #2a2a33;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: #22c55e;
+            width: 100%;
+        }
+
+        /* Tabela da Liga */
+        .league-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .league-table th, .league-table td {
+            padding: 6px;
+            text-align: center;
+            border-bottom: 1px solid #26262e;
+        }
+
+        .my-team-row {
+            background-color: #1e331e;
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        /* Feed Social */
+        .feed-post {
+            border-bottom: 1px solid #26262e;
+            padding: 8px 0;
+            font-size: 12px;
+        }
+
+        .feed-user {
+            color: #ffcc00;
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .trophy-badge {
+            background-color: #26262e;
+            border: 1px solid #ffcc00;
+            padding: 6px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- 1. CRIAÇÃO DO JOGADOR -->
+    <div id="creation-screen">
+        <div class="section-title">Criar Jogador</div>
+        <div class="card">
+            <label style="font-size: 11px; color: #aaa;">Nome do Jogador:</label>
+            <input type="text" id="init-name" value="Samir Gomes">
+
+            <label style="font-size: 11px; color: #aaa;">Nacionalidade:</label>
+            <input type="text" id="init-nat" value="Cabo Verde">
+
+            <label style="font-size: 11px; color: #aaa;">Número da Camisola:</label>
+            <input type="number" id="init-num" value="23" min="1" max="99">
+
+            <label style="font-size: 11px; color: #aaa;">Idade Inicial:</label>
+            <input type="text" value="16 anos" disabled style="opacity: 0.6;">
+
+            <label style="font-size: 11px; color: #aaa;">Clube Inicial:</label>
+            <select id="init-club">
+                <optgroup label="Espanha (La Liga)">
+                    <option value="Real Madrid|La Liga|Copa del Rey|Espanha">Real Madrid</option>
+                    <option value="FC Barcelona|La Liga|Copa del Rey|Espanha">FC Barcelona</option>
+                </optgroup>
+                <optgroup label="Inglaterra (Premier League)">
+                    <option value="Manchester City|Premier League|FA Cup|Inglaterra">Manchester City</option>
+                    <option value="Liverpool|Premier League|FA Cup|Inglaterra">Liverpool</option>
+                </optgroup>
+                <optgroup label="Brasil (Brasileirão)">
+                    <option value="Flamengo|Brasileirão|Copa do Brasil|Brasil">Flamengo</option>
+                    <option value="Santos FC|Brasileirão|Copa do Brasil|Brasil">Santos FC</option>
+                </optgroup>
+            </select>
+
+            <button class="btn-avancar" onclick="iniciarCarreira()">INICIAR CARREIRA</button>
+        </div>
+    </div>
+
+    <!-- 2. MENU PRINCIPAL (COM ABAS) -->
+    <div id="main-screen">
+        <!-- Header -->
+        <div class="card" style="text-align: center; margin-bottom: 8px;">
+            <div id="p-display-name" style="font-size: 18px; font-weight: bold; color: #fff;">SAMIR GOMES #23</div>
+            <div id="p-display-info" style="font-size: 12px; color: #aaa;">16 Anos • Real Madrid</div>
+            <div id="p-display-status" style="font-size: 11px; color: #ffcc00; margin-top: 4px;">Status: Opção de Rotação | Moral: 80%</div>
+            <button class="btn-avancar" style="margin-top: 8px;" onclick="jogarPartida()">► JOGAR PRÓXIMA PARTIDA</button>
+        </div>
+
+        <!-- Navegação de Abas -->
+        <div class="nav-tabs">
+            <button class="tab-btn active" onclick="mudarAba('tab-carreira', this)">Carreira</button>
+            <button class="tab-btn" onclick="mudarAba('tab-treino', this)">Treino & Árvore</button>
+            <button class="tab-btn" onclick="mudarAba('tab-empresario', this)">Empresário</button>
+            <button class="tab-btn" onclick="mudarAba('tab-estilo', this)">Estilo de Vida</button>
+            <button class="tab-btn" onclick="mudarAba('tab-trofeus', this)">Troféus</button>
+            <button class="tab-btn" onclick="mudarAba('tab-social', this)">Redes</button>
+        </div>
+
+        <!-- ABA CARREIRA & LIGA -->
+        <div id="tab-carreira" class="tab-content active">
+            <div class="section-title">Estado Físico & Clima</div>
+            <div class="card" style="margin-bottom: 8px;">
+                <div style="font-size: 11px; color: #aaa;">Energia / Fisico: <span id="val-stamina">100%</span></div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="bar-stamina" style="width: 100%;"></div></div>
+                <div style="font-size: 11px; color: #aaa; margin-top: 8px;">Risco de Lesão: <span id="val-lesao" style="color: #22c55e;">Baixo (0%)</span></div>
+            </div>
+
+            <div class="section-title">Tabela da Liga</div>
+            <div class="card">
+                <table class="league-table">
+                    <thead>
+                        <tr><th>Pos</th><th style="text-align: left;">Clube</th><th>J</th><th>Pts</th></tr>
+                    </thead>
+                    <tbody id="league-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ABA TREINO & ÁRVORE DE HABILIDADES -->
+        <div id="tab-treino" class="tab-content">
+            <div class="section-title">Atributos & Habilidades</div>
+            <div class="card">
+                <div style="font-size: 12px; color: #72d634; font-weight: bold; margin-bottom: 8px;" id="pts-badge">Pontos de Habilidade: 0 PT</div>
+                
+                <div style="font-size: 11px; color: #ffcc00; font-weight: bold; margin-top: 4px;">Técnicos</div>
+                <p style="font-size: 12px;">Finalização: <b id="val-fin">60</b> | Passe: <b id="val-pas">60</b> | Drible: <b id="val-dri">60</b></p>
+                
+                <div style="font-size: 11px; color: #ffcc00; font-weight: bold; margin-top: 8px;">Físicos</div>
+                <p style="font-size: 12px;">Velocidade: <b id="val-vel">60</b> | Resistência: <b id="val-res">60</b> | Força: <b id="val-for">60</b></p>
+                
+                <button class="btn-avancar" style="margin-top: 12px; background-color: #26262e; color: #fff;" onclick="treinarAtributos()">Treinar Atributos (+1 PT por 500€)</button>
+            </div>
+        </div>
+
+        <!-- ABA EMPRESÁRIO & MERCADO -->
+        <div id="tab-empresario" class="tab-content">
+            <div class="section-title">Contrato & Metas</div>
+            <div class="card" style="margin-bottom: 8px;">
+                <p style="font-size: 12px;">Salário Atual: <b id="val-salario">1.500€ / jogo</b></p>
+                <p style="font-size: 12px;">Meta da Época: <b id="val-meta">10 Golos</b></p>
+                <p style="font-size: 12px;">Prestígio no Clube: <b id="val-prestigio">Médio</b></p>
+            </div>
+
+            <div class="section-title">Propostas & Mercado</div>
+            <div class="card">
+                <div id="propostas-container" style="font-size: 12px; color: #aaa;">Sem propostas de transferência no momento.</div>
+            </div>
+        </div>
+
+        <!-- ABA ESTILO DE VIDA & PATROCÍNIOS -->
+        <div id="tab-estilo" class="tab-content">
+            <div class="section-title">Finanças & Compras</div>
+            <div class="card" style="margin-bottom: 8px;">
+                <p style="font-size: 13px; color: #22c55e;">Conta Bancária: <b id="val-saldo">5.000 €</b></p>
+                <div style="margin-top: 8px; display: flex; gap: 4px; flex-wrap: wrap;">
+                    <button class="tab-btn" onclick="comprarItem('Carro Desportivo', 25000)">Comprar Carro (25.000€)</button>
+                    <button class="tab-btn" onclick="comprarItem('Personal Trainer', 5000)">Personal Trainer (5.000€)</button>
+                </div>
+            </div>
+
+            <div class="section-title">Patrocínios & Chuteiras</div>
+            <div class="card">
+                <p style="font-size: 12px;">Chuteira Atual: <b id="val-chuteira">Padrão (+0 Atributos)</b></p>
+                <p style="font-size: 12px;">Patrocinador Master: <b id="val-patrocinio">Nenhum</b></p>
+            </div>
+        </div>
+
+        <!-- ABA TROFÉUS -->
+        <div id="tab-trofeus" class="tab-content">
+            <div class="section-title">Sala de Troféus</div>
+            <div class="card" id="trofeus-container">
+                <div style="font-size: 12px; color: #aaa;">Ainda não conquistaste troféus na tua carreira.</div>
+            </div>
+        </div>
+
+        <!-- ABA REDES SOCIAIS -->
+        <div id="tab-social" class="tab-content">
+            <div class="section-title">Feed do Twitter/X & Mídia</div>
+            <div class="card" id="feed-container">
+                <!-- Posts Dinâmicos -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. RESUMO DO JOGO -->
+    <div id="game-screen">
+        <div class="section-title" style="text-align: center;" id="match-comp-title">Resultado da Partida</div>
+        <div class="card">
+            <div class="stat-grid">
+                <div class="stat-box"><div class="stat-val" id="m-gols">0</div><div class="stat-lbl">Golos</div></div>
+                <div class="stat-box"><div class="stat-val" id="m-ast">0</div><div class="stat-lbl">Assist.</div></div>
+                <div class="stat-box"><div class="stat-val" id="m-nota">6.0</div><div class="stat-lbl">Nota</div></div>
+                <div class="stat-box"><div class="stat-val" id="m-idade">16</div><div class="stat-lbl">Idade</div></div>
+            </div>
+
+            <div id="pts-msg" style="background-color: #112211; border: 1px solid #22c55e; color: #22c55e; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; margin-bottom: 8px;">
+                +0 Pontos e Salário Creditado!
+            </div>
+
+            <button class="btn-avancar" onclick="voltarParaMenu()">CONTINUAR</button>
+        </div>
+    </div>
+
+    <!-- 4. APOSENTADORIA (39 ANOS) -->
+    <div id="retirement-screen">
+        <div class="section-title" style="text-align: center; color: #ffcc00;">Fim de Carreira (39 Anos)</div>
+        <div class="card" style="text-align: center;">
+            <h2 id="ret-name" style="color: #fff; margin-bottom: 4px;">Samir Gomes</h2>
+            <p id="ret-details" style="color: #888; font-size: 12px; margin-bottom: 12px;">Lenda do Futebol</p>
+
+            <div class="stat-grid">
+                <div class="stat-box"><div class="stat-val" id="total-gols">0</div><div class="stat-lbl">Golos Totais</div></div>
+                <div class="stat-box"><div class="stat-val" id="total-ast">0</div><div class="stat-lbl">Assistências</div></div>
+                <div class="stat-box"><div class="stat-val" id="total-titulos">0</div><div class="stat-lbl">Títulos Totais</div></div>
+                <div class="stat-box"><div class="stat-val" id="total-premios">0</div><div class="stat-lbl">Bolas de Ouro</div></div>
+            </div>
+
+            <button class="btn-avancar" onclick="location.reload()">NOVA CARREIRA</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let jogador = {
+        nome: "",
+        nacionalidade: "",
+        numero: 23,
+        idade: 16,
+        clube: "Real Madrid",
+        liga: "La Liga",
+        taca: "Copa del Rey",
+        paisClube: "Espanha",
+        rodadaAtual: 1,
+        pontosLiga: 0,
+        stamina: 100,
+        moral: 80,
+        statusElenco: "Opção de Rotação",
+        salario: 1500,
+        saldo: 5000,
+        pontosHabilidade: 0,
+        atributos: { fin: 60, pas: 60, dri: 60, vel: 60, res: 60, for: 60 },
+        totais: { golos: 0, assistencias: 0, ligas: 0, tacas: 0, continentais: 0, copasMundo: 0, bolasOuro: 0 },
+        trofeusList: [],
+        feed: []
+    };
+
+    function iniciarCarreira() {
+        jogador.nome = document.getElementById('init-name').value || "Samir Gomes";
+        jogador.nacionalidade = document.getElementById('init-nat').value || "Cabo Verde";
+        jogador.numero = document.getElementById('init-num').value || 23;
+        
+        let clubData = document.getElementById('init-club').value.split('|');
+        jogador.clube = clubData[0];
+        jogador.liga = clubData[1];
+        jogador.taca = clubData[2];
+        jogador.paisClube = clubData[3];
+
+        document.getElementById('p-display-name').innerText = `${jogador.nome.toUpperCase()} #${jogador.numero}`;
+        atualizarInterface();
+
+        document.getElementById('creation-screen').style.display = 'none';
+        document.getElementById('main-screen').style.display = 'block';
+
+        adicionarFeed("Mídia", `O jovem prodígio ${jogador.nome} assinou oficialmente pelo ${jogador.clube}!`);
+        atualizarTabelaLiga();
+    }
+
+    function mudarAba(abaId, btn) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(abaId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    function atualizarInterface() {
+        document.getElementById('p-display-info').innerText = `${jogador.nacionalidade} • ${jogador.idade} Anos • ${jogador.clube}`;
+        document.getElementById('p-display-status').innerText = `Status: ${jogador.statusElenco} | Moral: ${jogador.moral}%`;
+        document.getElementById('val-stamina').innerText = `${jogador.stamina}%`;
+        document.getElementById('bar-stamina').style.width = `${jogador.stamina}%`;
+        document.getElementById('pts-badge').innerText = `Pontos de Habilidade: ${jogador.pontosHabilidade} PT`;
+        document.getElementById('val-saldo').innerText = `${jogador.saldo.toLocaleString()} €`;
+        
+        for (let attr in jogador.atributos) {
+            if(document.getElementById(`val-${attr}`)) {
+                document.getElementById(`val-${attr}`).innerText = jogador.atributos[attr];
+            }
+        }
+    }
+
+    function atualizarTabelaLiga() {
+        let body = document.getElementById('league-body');
+        body.innerHTML = `
+            <tr class="my-team-row"><td>1</td><td style="text-align: left;">${jogador.clube}</td><td>${jogador.rodadaAtual}</td><td>${jogador.pontosLiga} pts</td></tr>
+            <tr><td>2</td><td style="text-align: left;">Rival Direto</td><td>${jogador.rodadaAtual}</td><td>${Math.max(0, jogador.pontosLiga - 2)} pts</td></tr>
+        `;
+    }
+
+    function jogarPartida() {
+        if (jogador.stamina < 20) {
+            alert("Estás demasiado cansado! Descansa antes de jogar.");
+            jogador.stamina += 30;
+            atualizarInterface();
+            return;
+        }
+
+        let golos = Math.random() < 0.4 ? Math.floor(Math.random() * 2) : 0;
+        let assistencias = Math.random() < 0.3 ? 1 : 0;
+        let nota = (6.0 + (golos * 1.5) + (assistencias * 1.0)).toFixed(1);
+
+        jogador.stamina -= 15;
+        jogador.saldo += jogador.salario;
+        jogador.totais.golos += golos;
+        jogador.totais.assistencias += assistencias;
+        jogador.pontosLiga += 3;
+        jogador.rodadaAtual++;
+
+        if (golos > 0) {
+            adicionarFeed("FanClub", `Grande exibição de ${jogador.nome}! Marcou ${golos} golo(s) hoje!`);
+        }
+
+        if (jogador.rodadaAtual > 10) {
+            jogador.rodadaAtual = 1;
+            jogador.pontosLiga = 0;
+            jogador.idade++;
+            jogador.totais.ligas++;
+            adicionarTrofeu(`Campeão da ${jogador.liga}`);
+        }
+
+        document.getElementById('m-gols').innerText = golos;
+        document.getElementById('m-ast').innerText = assistencias;
+        document.getElementById('m-nota').innerText = nota;
+        document.getElementById('m-idade').innerText = jogador.idade;
+
+        document.getElementById('main-screen').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'block';
+    }
+
+    function voltarParaMenu() {
+        if (jogador.idade >= 39) {
+            exibirAposentadoria();
+            return;
+        }
+
+        atualizarTabelaLiga();
+        atualizarInterface();
+      document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('main-screen').style.display = 'block';
+    }
+
+    function treinarAtributos() {
+        if (jogador.saldo >= 500) {
+            jogador.saldo -= 500;
+            jogador.atributos.fin += 1;
+            jogador.atributos.pas += 1;
+            atualizarInterface();
+            alert("Treino concluído! Atributos aumentados.");
+        } else {
+            alert("Saldo insuficiente para treinar.");
+        }
+    }
+
+    function comprarItem(nome, preco) {
+        if (jogador.saldo >= preco) {
+            jogador.saldo -= preco;
+            jogador.moral = Math.min(100, jogador.moral + 10);
+            atualizarInterface();
+            alert(`Compraste: ${nome}! Moral aumentada.`);
+        } else {
+            alert("Saldo insuficiente na conta bancária.");
+        }
+    }
+
+    function adicionarFeed(user, texto) {
+        let container = document.getElementById('feed-container');
+        let post = `<div class="feed-post"><div class="feed-user">@${user}</div><div>${texto}</div></div>`;
+        container.innerHTML = post + container.innerHTML;
+    }
+
+    function adicionarTrofeu(nome) {
+        jogador.trofeusList.push(nome);
+        let container = document.getElementById('trofeus-container');
+        container.innerHTML = jogador.trofeusList.map(t => `<div class="trophy-badge">🏆 <span>${t}</span></div>`).join('');
+    }
+
+    function exibirAposentadoria() {
+        document.getElementById('game-screen').style.display = 'none';
+        document.getElementById('main-screen').style.display = 'none';
+        document.getElementById('retirement-screen').style.display = 'block';
+
+        document.getElementById('ret-name').innerText = `${jogador.nome} (#${jogador.numero})`;
+        document.getElementById('ret-details').innerText = `${jogador.nacionalidade} • Aposentado aos 39 Anos`;
+        document.getElementById('total-gols').innerText = jogador.totais.golos;
+        document.getElementById('total-ast').innerText = jogador.totais.assistencias;
+        document.getElementById('total-titulos').innerText = jogador.totais.ligas + jogador.totais.tacas;
+        document.getElementById('total-premios').innerText = jogador.totais.bolasOuro;
+    }
+</script>
+
+</body>
+</html>
